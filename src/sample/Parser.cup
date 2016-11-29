@@ -1,0 +1,42 @@
+package scanner;
+import java.io.*;
+import java.util.*;
+import java_cup.runtime.*;
+import scanner.Lexer;
+
+parser code {:
+
+    public void report_error(String message, Object info)  {
+        System.out.println("Warning - " + message);
+    }
+
+    public void report_fatal_error(String message, Object info)  {
+        System.out.println("Error - " + message);
+        System.exit(-1);
+    }
+
+:};
+
+terminal String PLUS, MINUS, DIV, TIMES, L_PARENTHESIS, R_PARENTHESIS;
+terminal integer NUMBER;
+
+non terminal Integer GOAL, EXPR, TERM, FACTOR;
+
+start with GOAL;
+
+GOAL ::= EXPR {: System.out.println("SUCESSO!"); :}
+;
+
+EXPR ::= EXPR PLUS TERM
+        |EXPR MINUS TERM
+        |TERM
+;
+
+TERM ::= TERM TIMES FACTOR
+        |TERM DIV FACTOR
+        |FACTOR
+;
+
+FACTOR ::= NUMBER
+        |L_PARENTHESIS EXPR R_PARENTHESIS
+;

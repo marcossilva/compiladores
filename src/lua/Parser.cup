@@ -1,0 +1,112 @@
+package lua;
+import java.io.*;
+import java.util.*;
+import java_cup.runtime.*;
+import lua.Lexer;
+
+parser code {:
+
+    public void report_error(String message, Object info)  {
+        System.out.println("Warning - " + message);
+    }
+
+    public void report_fatal_error(String message, Object info)  {
+        System.out.println("Error - " + message);
+        System.exit(-1);
+    }
+
+:};
+
+terminal String EQUAL, DO, END, WHILE, REPEAT, UNTIL, IF, THEN, ELSEIF, ELSE, FOR, COMMA, IN, FUNCTION, LOCAL, RETURN, BREAK, DOT, COLON, NIL, FALSE, TRUE, THREE_DOTS, L_PARENTHESIS, R_PARENTHESIS, L_BRACES, R_BRACES, L_BRACKETS, R_BRACKETS, PLUS, MINUS, TIMES, DIV, EXP, MOD, TWO_DOTS, SMALLER_THAN, SMALLER_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL,EQUAL_EQUAL, APROX, AND, OR, NOT, HASHTAG, STRING, NAME, SEMICOLON;
+terminal Integer INTEGER;
+terminal Float FLOAT;
+
+non terminal chunck, stat, laststat, varlist, explist, functioncall, block, exp, namelist, funcname, funcbody, var, prefixexp, function, tableconstructor, binop, unop, args, parlist, fieldlist, field, fieldesp;
+
+start with chunck;
+
+
+chunck ::= stat SEMICOLON laststat SEMICOLON
+;
+
+block ::= chunck
+;
+
+stat ::= varlist EQUAL explist
+        |functioncall
+        |DO block END
+        |WHILE exp DO block END
+        |REPEAT block UNTIL exp
+        |FOR namelist IN explist DO block END
+        |FUNCTION funcname funcbody
+        |LOCAL FUNCTION NAME funcbody
+;
+
+laststat ::= BREAK
+;
+
+var ::= NAME
+        |prefixexp DOT NAME
+;
+
+exp ::= NIL
+        |FALSE
+        |TRUE
+        |INTEGER
+        |FLOAT
+        |STRING
+        |THREE_DOTS
+        |function
+        |prefixexp
+        |tableconstructor
+        |exp binop exp
+        |unop exp
+;
+
+prefixexp ::= var
+            |functioncall
+            |L_PARENTHESIS exp R_PARENTHESIS
+;
+
+functioncall ::= prefixexp args
+                |prefixexp COLON NAME args
+;
+
+args ::= tableconstructor
+        |STRING
+;
+
+function ::= FUNCTION funcbody
+;
+
+parlist ::= THREE_DOTS
+;
+
+field ::= NAME EQUAL exp
+        |exp
+;
+
+fieldesp ::= COMMA
+;
+
+binop ::= PLUS
+        |MINUS
+        |TIMES
+        |DIV
+        |EXP
+        |MOD
+        |TWO_DOTS
+        |GREATER_THAN
+        |GREATER_THAN_OR_EQUAL
+        |SMALLER_THAN
+        |SMALLER_THAN_OR_EQUAL
+        |EQUAL_EQUAL
+        |APROX
+        |AND
+        |OR
+;
+
+unop ::= MINUS
+        |NOT
+        |HASHTAG
+;
