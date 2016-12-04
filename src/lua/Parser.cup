@@ -18,36 +18,58 @@ parser code {:
 :};
 
 terminal String EQUAL, DO, END, WHILE, REPEAT, UNTIL, IF, THEN, ELSEIF, ELSE, FOR, COMMA, IN, FUNCTION, LOCAL, RETURN, BREAK, DOT, COLON, NIL, FALSE, TRUE, THREE_DOTS, L_PARENTHESIS, R_PARENTHESIS, L_BRACES, R_BRACES, L_BRACKETS, R_BRACKETS, PLUS, MINUS, TIMES, DIV, EXP, MOD, TWO_DOTS, SMALLER_THAN, SMALLER_THAN_OR_EQUAL, GREATER_THAN, GREATER_THAN_OR_EQUAL,EQUAL_EQUAL, APROX, AND, OR, NOT, HASHTAG, STRING, NAME, SEMICOLON;
-terminal Integer INTEGER;
-terminal Float FLOAT;
+terminal Integer INTEGER, FLOAT;
 
-non terminal chunck, stat, laststat, varlist, explist, functioncall, block, exp, namelist, funcname, funcbody, var, prefixexp, function, tableconstructor, binop, unop, args, parlist, fieldlist, field, fieldesp;
+non terminal String chunck, stat, laststat, varlist, explist, functioncall, block, exp, namelist, funcname, funcbody, var, prefixexp, function, tableconstructor, binop, unop, args, parlist, fieldlist, field, fieldesp, 
+a, b, sm, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r;
 
 start with chunck;
 
 
-chunck ::= stat SEMICOLON laststat SEMICOLON
-;
+chunck ::= a b;
+a      ::= /* empty */ | a stat sm;
+b      ::= /* empty */ | laststat sm;
+sm     ::= /* empty */ | SEMICOLON;
 
-block ::= chunck
-;
+block ::= chunck;
 
 stat ::= varlist EQUAL explist
         |functioncall
         |DO block END
         |WHILE exp DO block END
         |REPEAT block UNTIL exp
+        |IF exp THEN block c d
+        |FOR NAME EQUAL exp COLON exp e DO block END
         |FOR namelist IN explist DO block END
         |FUNCTION funcname funcbody
         |LOCAL FUNCTION NAME funcbody
-;
+        |LOCAL namelist f;
+c      ::= /* empty */ | c ELSEIF exp THEN block;
+d      ::= /* empty */ | ELSE block END;
+e      ::= /* empty */ | COLON exp;
+f      ::= /* empty */ | EQUAL explist;
 
-laststat ::= BREAK
-;
+laststat ::= RETURN g
+        |BREAK;
+g      ::= /* empty */ | explist;
 
-var ::= NAME
-        |prefixexp DOT NAME
-;
+funcname ::= NAME h i;
+h      ::= /* empty */ | h DOT NAME;
+i      ::= /* empty */ | COLON NAME;
+
+varlist  ::= var j;
+j      ::= /* empty */ | j COMMA var;
+
+var    ::= NAME
+        |prefixexp k
+        |prefixexp DOT NAME;
+k      ::= /* empty */ | exp;
+
+namelist ::= NAME l;
+l      ::= /* empty */ | l COMMA NAME;
+
+explist  ::= m exp;
+m        ::= /* empty */ | m exp COMMA;
 
 exp ::= NIL
         |FALSE
@@ -60,34 +82,39 @@ exp ::= NIL
         |prefixexp
         |tableconstructor
         |exp binop exp
-        |unop exp
-;
+        |unop exp;
 
 prefixexp ::= var
             |functioncall
-            |L_PARENTHESIS exp R_PARENTHESIS
-;
+            |L_PARENTHESIS exp R_PARENTHESIS;
 
 functioncall ::= prefixexp args
-                |prefixexp COLON NAME args
-;
+                |prefixexp COLON NAME args;
 
-args ::= tableconstructor
-        |STRING
-;
+args ::= L_PARENTHESIS n R_PARENTHESIS
+        |tableconstructor
+        |STRING;
+n    ::= /* empty */ | explist;
 
-function ::= FUNCTION funcbody
-;
+function ::= FUNCTION funcbody;
 
-parlist ::= THREE_DOTS
-;
+parlist ::= namelist o
+        |THREE_DOTS;
+o       ::= /* empty */ | COMMA THREE_DOTS;
 
-field ::= NAME EQUAL exp
-        |exp
-;
+tableconstructor ::= L_BRACKETS p R_BRACKETS;
+p       ::= /* empty */ | fieldesp;
+
+fieldlist   ::= field q r;
+q       ::= /* empty */ | q fieldesp field;
+r       ::= /* empty */ | fieldesp;
+
+field ::= L_BRACES exp R_BRACES EQUAL exp
+        |NAME EQUAL exp
+        |exp;
 
 fieldesp ::= COMMA
-;
+        |SEMICOLON;
 
 binop ::= PLUS
         |MINUS
@@ -103,10 +130,8 @@ binop ::= PLUS
         |EQUAL_EQUAL
         |APROX
         |AND
-        |OR
-;
+        |OR;
 
 unop ::= MINUS
         |NOT
-        |HASHTAG
-;
+        |HASHTAG;

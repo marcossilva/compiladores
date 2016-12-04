@@ -14,5 +14,5 @@ for i = 1,3 do
     print(names[i])
 end
 --[[
-Isso é um comentário de bloco1
+Isso é um comentário de bloco1 
 --]]

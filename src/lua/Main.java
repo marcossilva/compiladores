@@ -12,10 +12,10 @@ import java_cup.runtime.Symbol;
  */
 public class Main {
     public static void main(String[] args){
-        geraLex();
-        testaLex();
-//        geraParser();
-//        testaParser();
+//        geraLex();
+//        testaLex();
+        geraParser();
+        testaParser();
     }
     public static void geraLex(){
         String path = "/home/marcos/compiler/LuaCompiler/src/lua/lexer.flex";
