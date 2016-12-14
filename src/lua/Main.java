@@ -1,5 +1,6 @@
 package lua;
 
+import static com.sun.corba.se.impl.util.Utility.printStackTrace;
 import java.io.File;
 import java.io.FileReader;
 import java.util.logging.Level;
@@ -41,7 +42,7 @@ public class Main {
     private static void geraParser(){
         try {
             //java -jar ../include/java-cup-11a.jar -parser Parser -symbols Sym -destdir ./lua/ ./lua/Parser.cup
-            String[] cup = {"-parser","Parser","-symbols","Sym","-destdir","/home/marcos/compiler/LuaCompiler/src/lua/", "/home/marcos/compiler/LuaCompiler/src/lua/Parser.cup"};
+            String[] cup = {"-expect", "5","-parser","Parser","-symbols","Sym","-destdir","/home/marcos/compiler/LuaCompiler/src/lua/", "/home/marcos/compiler/LuaCompiler/src/lua/Parser.cup"};
             java_cup.Main.main(cup);
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -57,6 +58,7 @@ public class Main {
             System.out.println("Compilacao concluída com sucesso!");
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            printStackTrace();
         }
     }
 }
