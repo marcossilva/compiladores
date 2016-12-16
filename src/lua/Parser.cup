@@ -6,55 +6,62 @@ import lua.Lexer;
 
 parser code {:
 
-    public void report_error(String message, Object info)  {
-        System.out.println("Warning - " + message);
+    public void report_error(String message, Symbol s)  {
+        System.out.println("WARNING1: " + message);
+        System.out.println("WARNING2: " + s.left + " column " + s.right);
     }
 
-    public void report_fatal_error(String message, Object info)  {
+    public void report_fatal_error(String message, Object s)  {
         System.out.println("Error - " + message);
+        //System.out.println("ERROR: compiler has detected a syntax error at line " + s.left + " column " + s.right);
         System.exit(-1);
     }
 
 :};
 
-terminal String EQUAL, DO, END, WHILE, REPEAT, UNTIL, IF, THEN, ELSEIF, ELSE, FOR, COMMA, 
+terminal Token EQUAL, DO, END, WHILE, REPEAT, UNTIL, IF, THEN, ELSEIF, ELSE, FOR, COMMA, 
 IN, FUNCTION, LOCAL, RETURN, BREAK, DOT, COLON, NIL, FALSE, TRUE, THREE_DOTS, L_PARENTHESIS,
  R_PARENTHESIS, L_BRACES, R_BRACES, L_BRACKETS, R_BRACKETS, PLUS, MINUS, TIMES, DIV, EXP,
   MOD, TWO_DOTS, SMALLER_THAN, SMALLER_THAN_OR_EQUAL, GREATER_THAN,
-   GREATER_THAN_OR_EQUAL,EQUAL_EQUAL, APROX, AND, OR, NOT, HASHTAG, STRING, NAME, SEMICOLON;
-terminal Integer INTEGER, FLOAT;
+   GREATER_THAN_OR_EQUAL,EQUAL_EQUAL, APROX, AND, OR, NOT, HASHTAG, STRING, NAME, SEMICOLON, UOP;
+terminal No NUMBER;
 
-non terminal String chunck, stat, laststat, varlist, explist, functioncall, block, exp, namelist, funcname, funcbody, var, prefixexp, function, tableconstructor, binop, unop, args, parlist, fieldlist, field, fieldesp, 
-a, c, h, j, l, m, q;
-
+non terminal No chunk, stat, laststat, varlist, explist, functioncall, block, exp, namelist, funcname, funcbody, var, prefixexp, function, tableconstructor, binop, unop, args, parlist, fieldlist, field, fieldsep, 
+c, h, j, l, m, q;
+/*Precedencia 
+https://www.lua.org/manual/5.1/pt/manual.html 2.5.6
+*/
 precedence left OR;
 precedence left AND;
 precedence left SMALLER_THAN, GREATER_THAN, SMALLER_THAN_OR_EQUAL, GREATER_THAN_OR_EQUAL, APROX, EQUAL_EQUAL;
-precedence right COLON ;
+precedence right TWO_DOTS ;
 precedence left PLUS, MINUS;
 precedence left TIMES, DIV, MOD;
-/*precedence left UOP;*/
+precedence left UOP;
 precedence right EXP;
 
-start with chunck;
+precedence nonassoc L_PARENTHESIS, R_PARENTHESIS;
+
+start with chunk;
 
 
-chunck ::= /* empty */
+chunk ::= /* empty */
         |laststat SEMICOLON
         |laststat
-        |a
-        |a laststat SEMICOLON
-        |a laststat;
-a      ::= /* empty */ | a stat SEMICOLON | a stat;
+        |stat chunk
+        |stat SEMICOLON chunk
+        |error chunk;
 
-block ::= chunck;
+block ::= chunk;
 
 stat ::= varlist EQUAL explist
         |functioncall
         |DO block END
         |WHILE exp DO block END
         |REPEAT block UNTIL exp
-        |IF exp THEN block c
+        |IF exp THEN block END
+        |IF exp THEN block c END
+        |IF exp THEN block ELSE block END
         |IF exp THEN block c ELSE block END
         |FOR NAME EQUAL exp COLON exp DO block END
         |FOR NAME EQUAL exp COLON exp COLON exp DO block END
@@ -63,46 +70,48 @@ stat ::= varlist EQUAL explist
         |LOCAL FUNCTION NAME funcbody
         |LOCAL namelist
         |LOCAL namelist EQUAL explist;
-c      ::= /* empty */ | c ELSEIF exp THEN block;
+c      ::= c ELSEIF exp THEN block | ELSEIF exp THEN block;
 
 laststat ::= RETURN
         |RETURN explist
         |BREAK;
 
-funcname ::= NAME h
+funcname ::= NAME
+            |NAME h
             |NAME h COLON NAME;
-h      ::= /* empty */ | h DOT NAME;
+h      ::= DOT NAME | h DOT NAME;
 
-varlist  ::= var j;
-j      ::= /* empty */ | j COMMA var;
+varlist  ::= var j
+            |var;
+j      ::= COMMA var | j COMMA var;
 
 var    ::= NAME
-        |prefixexp
-        |prefixexp exp
+        |prefixexp L_BRACKETS exp R_BRACKETS
         |prefixexp DOT NAME;
 
-namelist ::= NAME l;
-l      ::= /* empty */ | l COMMA NAME;
+namelist ::= NAME
+        |NAME l;
+l      ::= COMMA NAME | l COMMA NAME;
 
-explist  ::= m exp;
-m        ::= /* empty */ | m exp COMMA;
+explist  ::= m exp
+        | exp;
+m        ::= exp COMMA | m exp COMMA;
 
 exp ::= NIL
         |FALSE
         |TRUE
-        |INTEGER
-        |FLOAT
+        |NUMBER
         |STRING
         |THREE_DOTS
         |function
         |prefixexp
         |tableconstructor
         |exp binop exp
-        |unop exp;
+        |unop exp %prec UOP;
 
 prefixexp ::= var
-            |functioncall
-            |L_PARENTHESIS exp R_PARENTHESIS;
+        |functioncall /*conflito*/
+        |L_PARENTHESIS exp R_PARENTHESIS;
 
 functioncall ::= prefixexp args
                 |prefixexp COLON NAME args;
@@ -114,39 +123,43 @@ args ::= L_PARENTHESIS explist R_PARENTHESIS
 
 function ::= FUNCTION funcbody;
 
+funcbody ::= L_PARENTHESIS  R_PARENTHESIS block END
+        |L_PARENTHESIS parlist R_PARENTHESIS block END;
 parlist ::= namelist
         |namelist COMMA THREE_DOTS
         |THREE_DOTS;
 
-tableconstructor ::= L_BRACKETS fieldesp R_BRACKETS
-        |L_BRACKETS R_BRACKETS;
+tableconstructor ::= L_BRACES fieldlist R_BRACES
+        |L_BRACES R_BRACES;
 
-fieldlist   ::= field q fieldesp
-        |field q;
-q       ::= /* empty */ | q fieldesp field;
+fieldlist   ::= field q fieldsep
+        |field fieldsep
+        |field q
+        |field;
+q       ::= fieldsep field | q fieldsep field;
 
-field ::= L_BRACES exp R_BRACES EQUAL exp
+field ::= L_BRACKETS exp R_BRACKETS EQUAL exp
         |NAME EQUAL exp
         |exp;
 
-fieldesp ::= COMMA
+fieldsep ::= COMMA
         |SEMICOLON;
 
-binop ::= PLUS
-        |MINUS
-        |TIMES
-        |DIV
-        |EXP
-        |MOD
-        |TWO_DOTS
-        |GREATER_THAN
-        |GREATER_THAN_OR_EQUAL
-        |SMALLER_THAN
-        |SMALLER_THAN_OR_EQUAL
-        |EQUAL_EQUAL
-        |APROX
-        |AND
-        |OR;
+binop ::= PLUS:x                          {:RESULT = new No("binop", new No(x));:}
+        |MINUS:x                          {:RESULT = new No("binop", new No(x));:}
+        |TIMES:x                          {:RESULT = new No("binop", new No(x));:}
+        |DIV:x                            {:RESULT = new No("binop", new No(x));:}
+        |EXP:x                            {:RESULT = new No("binop", new No(x));:}
+        |MOD:x                            {:RESULT = new No("binop", new No(x));:}
+        |TWO_DOTS:x                       {:RESULT = new No("binop", new No(x));:}
+        |GREATER_THAN:x                   {:RESULT = new No("binop", new No(x));:}
+        |GREATER_THAN_OR_EQUAL:x          {:RESULT = new No("binop", new No(x));:}
+        |SMALLER_THAN:x                   {:RESULT = new No("binop", new No(x));:}
+        |SMALLER_THAN_OR_EQUAL:x          {:RESULT = new No("binop", new No(x));:}
+        |EQUAL_EQUAL:x                    {:RESULT = new No("binop", new No(x));:}
+        |APROX:x                          {:RESULT = new No("binop", new No(x));:}
+        |AND:x                            {:RESULT = new No("binop", new No(x));:}
+        |OR:x                             {:RESULT = new No("binop", new No(x));:};
 
 unop ::= MINUS
         |NOT

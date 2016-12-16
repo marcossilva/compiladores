@@ -15,95 +15,107 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 %{
 	StringBuffer string = new StringBuffer();
+
+	private Symbol symbol(int type) {
+		System.out.println(yytext());
+		return new Symbol(type, yyline, yycolumn, type);
+	}
+	private Symbol symbol(int type, Object value) {
+		System.out.println(type+" , "+value);
+		return new Symbol(type, yyline, yycolumn, value.toString());
+	}
 %}
 
 Name			= [\w_][\w]*
 Integer			= \d+
 Float 			= \d+(\.\d+){0,1}(e[+-]{0,1}\d+){0,1}
 StringInit		= \"|\'
-Ignore 			= [\n|\s|\t\r]
+Ignore 			= \r|\n|\r\n|" "|\t|\f|\t\f
 CommentLine 	= --.*\n
 CommentBlockInit	= --\[\[\n
-Function 		= print|type
 
 %%
 <YYINITIAL>{
 	{CommentBlockInit}				{ string.setLength(0); string.append("--[[\n"); yybegin(BLOCK_COMMENT); }
-	{CommentLine}					{ System.out.println(yytext() + "\t,COMMENT"); }
-	";"								{ System.out.println(yytext() + "\t,SEMICOLON"); return new Symbol(Sym.SEMICOLON); }
-	"="								{ System.out.println(yytext() + "\t,EQUAL"); return new Symbol(Sym.EQUAL); }
-	"do"							{ System.out.println(yytext() + "\t,DO"); return new Symbol(Sym.DO); }
-	"end"							{ System.out.println(yytext() + "\t,END"); return new Symbol(Sym.END); }
-	"while"							{ System.out.println(yytext() + "\t,WHILE"); return new Symbol(Sym.WHILE); }
-	"repeat"						{ System.out.println(yytext() + "\t,REPEAT"); return new Symbol(Sym.REPEAT); }
-	"until"							{ System.out.println(yytext() + "\t,UNTIL"); return new Symbol(Sym.UNTIL); }
-	"if"							{ System.out.println(yytext() + "\t,IF"); return new Symbol(Sym.IF); }
-	"then"							{ System.out.println(yytext() + "\t,THEN"); return new Symbol(Sym.THEN); }
-	"elseif"						{ System.out.println(yytext() + "\t,ELSEIF"); return new Symbol(Sym.ELSEIF); }
-	"else"							{ System.out.println(yytext() + "\t,ELSE"); return new Symbol(Sym.ELSE); }
-	"for"							{ System.out.println(yytext() + "\t,FOR"); return new Symbol(Sym.FOR); }
-	","								{ System.out.println(yytext() + "\t,COMMA"); return new Symbol(Sym.COMMA); }
-	"in"							{ System.out.println(yytext() + "\t,IN"); return new Symbol(Sym.IN); }
-	{Function}						{ System.out.println(yytext() + "\t,FUNCTION"); return new Symbol(Sym.FUNCTION); }
-	"local"							{ System.out.println(yytext() + "\t,LOCAL"); return new Symbol(Sym.LOCAL); }
-	"return"						{ System.out.println(yytext() + "\t,RETURN"); return new Symbol(Sym.RETURN); }
-	"break"							{ System.out.println(yytext() + "\t,BREAK"); return new Symbol(Sym.BREAK); }
-	"."								{ System.out.println(yytext() + "\t,DOT"); return new Symbol(Sym.DOT); }
-	":"								{ System.out.println(yytext() + "\t,COLON"); return new Symbol(Sym.COLON); }
-	"nil"							{ System.out.println(yytext() + "\t,NIL"); return new Symbol(Sym.NIL); }
-	"false"							{ System.out.println(yytext() + "\t,FALSE"); return new Symbol(Sym.FALSE); }
-	"true"							{ System.out.println(yytext() + "\t,TRUE"); return new Symbol(Sym.TRUE); }
+	{CommentLine}					{}
+	{Ignore}						{}
+	";"								{ return symbol(Sym.SEMICOLON); }
+	"="								{ return symbol(Sym.EQUAL); }
+	"do"							{ return symbol(Sym.DO); }
+	"end"							{ return symbol(Sym.END); }
+	"while"							{ return symbol(Sym.WHILE); }
+	"repeat"						{ return symbol(Sym.REPEAT); }
+	"until"							{ return symbol(Sym.UNTIL); }
+	"if"							{ return symbol(Sym.IF); }
+	"then"							{ return symbol(Sym.THEN); }
+	"elseif"						{ return symbol(Sym.ELSEIF); }
+	"else"							{ return symbol(Sym.ELSE); }
+	"for"							{ return symbol(Sym.FOR); }
+	","								{ return symbol(Sym.COMMA); }
+	"in"							{ return symbol(Sym.IN); }
+	"function"						{ return symbol(Sym.FUNCTION); }
+	"local"							{ return symbol(Sym.LOCAL); }
+	"return"						{ return symbol(Sym.RETURN); }
+	"break"							{ return symbol(Sym.BREAK); }
+	"."								{ return symbol(Sym.DOT); }
+	":"								{ return symbol(Sym.COLON); }
+	"nil"							{ return symbol(Sym.NIL); }
+	"false"							{ return symbol(Sym.FALSE); }
+	"true"							{ return symbol(Sym.TRUE); }
 
-	"..."							{ System.out.println(yytext() + "\t,THREE_DOTS"); return new Symbol(Sym.THREE_DOTS); }
-	"("								{ System.out.println(yytext() + "\t,L_PARENTHESIS"); return new Symbol(Sym.L_PARENTHESIS); }
-	")"								{ System.out.println(yytext() + "\t,R_PARENTHESIS"); return new Symbol(Sym.R_PARENTHESIS); }
-	"{"								{ System.out.println(yytext() + "\t,L_BRACES"); return new Symbol(Sym.L_BRACES); }
-	"}"								{ System.out.println(yytext() + "\t,R_BRACES"); return new Symbol(Sym.R_BRACES); }
-	"["								{ System.out.println(yytext() + "\t,L_BRACKETS"); return new Symbol(Sym.L_BRACKETS); }
-	"]"								{ System.out.println(yytext() + "\t,R_BRACKETS"); return new Symbol(Sym.R_BRACKETS); }
-	"+"								{ System.out.println(yytext() + "\t,PLUS"); return new Symbol(Sym.PLUS); }
-	"-"								{ System.out.println(yytext() + "\t,MINUS"); return new Symbol(Sym.MINUS); }
-	"*"								{ System.out.println(yytext() + "\t,TIMES"); return new Symbol(Sym.TIMES); }
-	"/"								{ System.out.println(yytext() + "\t,DIV"); return new Symbol(Sym.DIV); }
-	"^"								{ System.out.println(yytext() + "\t,EXP"); return new Symbol(Sym.EXP); }
-	"%"								{ System.out.println(yytext() + "\t,MOD"); return new Symbol(Sym.MOD); }
-	".."							{ System.out.println(yytext() + "\t,TWO_DOTS"); return new Symbol(Sym.TWO_DOTS); }
-	"<"								{ System.out.println(yytext() + "\t,SMALLER_THAN"); return new Symbol(Sym.SMALLER_THAN); }
-	"<="							{ System.out.println(yytext() + "\t,SMALLER_THAN_OR_EQUAL"); return new Symbol(Sym.SMALLER_THAN_OR_EQUAL); }
-	">"								{ System.out.println(yytext() + "\t,GREATER_THAN"); return new Symbol(Sym.GREATER_THAN); }
-	">="							{ System.out.println(yytext() + "\t,GREATER_THAN_OR_EQUAL"); return new Symbol(Sym.GREATER_THAN_OR_EQUAL); }
-	"=="							{ System.out.println(yytext() + "\t,EQUAL_EQUAL"); return new Symbol(Sym.EQUAL_EQUAL); }
-	"~="							{ System.out.println(yytext() + "\t,APROX"); return new Symbol(Sym.APROX); }
-	"and"							{ System.out.println(yytext() + "\t,AND"); return new Symbol(Sym.AND); }
-	"or"							{ System.out.println(yytext() + "\t,OR"); return new Symbol(Sym.OR); }
+	"..."							{ return symbol(Sym.THREE_DOTS); }
+	"("								{ return symbol(Sym.L_PARENTHESIS); }
+	")"								{ return symbol(Sym.R_PARENTHESIS); }
+	"{"								{ return symbol(Sym.L_BRACES); }
+	"}"								{ return symbol(Sym.R_BRACES); }
+	"["								{ return symbol(Sym.L_BRACKETS); }
+	"]"								{ return symbol(Sym.R_BRACKETS); }
+	"+"								{ return symbol(Sym.PLUS); }
+	"-"								{ return symbol(Sym.MINUS); }
+	"*"								{ return symbol(Sym.TIMES); }
+	"/"								{ return symbol(Sym.DIV); }
+	"^"								{ return symbol(Sym.EXP); }
+	"%"								{ return symbol(Sym.MOD); }
+	".."							{ return symbol(Sym.TWO_DOTS); }
+	"<"								{ return symbol(Sym.SMALLER_THAN); }
+	"<="							{ return symbol(Sym.SMALLER_THAN_OR_EQUAL); }
+	">"								{ return symbol(Sym.GREATER_THAN); }
+	">="							{ return symbol(Sym.GREATER_THAN_OR_EQUAL); }
+	"=="							{ return symbol(Sym.EQUAL_EQUAL); }
+	"~="							{ return symbol(Sym.APROX); }
+	"and"							{ return symbol(Sym.AND); }
+	"or"							{ return symbol(Sym.OR); }
 
-	"not"							{ System.out.println(yytext() + "\t,NOT"); return new Symbol(Sym.NOT); }
-	"#"								{ System.out.println(yytext() + "\t,HASHTAG"); return new Symbol(Sym.HASHTAG); }
+	"not"							{ return symbol(Sym.NOT); }
+	"#"								{ return symbol(Sym.HASHTAG); }
 	{StringInit}					{ string.setLength(0); yybegin(STRING); }
 	
-	{Integer}						{ System.out.println(yytext() + "\t,INTEGER"); return new Symbol(Sym.INTEGER); }
-	{Float}							{ System.out.println(yytext() + "\t,FLOAT"); return new Symbol(Sym.FLOAT); }
-	{Name}							{ System.out.println(yytext() + "\t,NAME"); return new Symbol(Sym.NAME); }
-	{Ignore}						{}
+	{Integer}						{ return symbol(Sym.NUMBER, Integer.valueOf(yytext())); }
+	{Float}							{ return symbol(Sym.NUMBER, Float.valueOf(yytext())); }
+	{Name}							{ return symbol(Sym.NAME, yytext()); }
 }
 <STRING> {
 	{StringInit}				{ yybegin(YYINITIAL);
 								System.out.println(string.toString() + "\t,STRING");
-								return new Symbol(Sym.STRING,string.toString());}
+								return symbol(Sym.STRING,string.toString());}
 	[^\n\r\"\\\']+				{ string.append( yytext() ); }
 	\\t							{ string.append('\t'); }
 	\\n							{ string.append('\n'); }
 	\\r							{ string.append('\r'); }
+	\\b							{ string.append('\b'); }
+	\\f							{ string.append('\f'); }
 	\\\"						{ string.append('\"'); }
 	\\							{ string.append('\\'); }
+	\\.                         { throw new RuntimeException("Malformed String: Unexpected escape symbol \""+yytext()+"\""); }
+	[\r|\n|\r\n]				{ throw new RuntimeException("Malformed String: String doesn't end in one line."); }
 }
 
 <BLOCK_COMMENT> {
 	\]\]						{ yybegin(YYINITIAL);
 								string.append("]]");
-								System.out.println(string.toString() + "\t,BLOCK_COMMENT");}
+								/*System.out.println(string.toString() + "\t,BLOCK_COMMENT");*/}
 	[^\]]+						{ string.append(yytext()); }
 }
 
-<<EOF>> 							{ System.out.println(yytext() + "\t,EOF"); return new Symbol( Sym.EOF ); }
+<<EOF>> 							{ return symbol( Sym.EOF ); }
 [^] 								{ throw new Error("Illegal character: "+yytext()+" at line "+(yyline+1)+", column "+(yycolumn+1) ); }
