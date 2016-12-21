@@ -50,7 +50,8 @@ chunk ::= /* empty */
         |laststat
         |stat chunk
         |stat SEMICOLON chunk
-        |error chunk;
+        |error:e SEMICOLON chunk                                    {: Main.printErro(eleft,eright); :}
+        |error:e chunk                                              {: Main.printErro(eleft,eright); :};
 
 block ::= chunk;
 

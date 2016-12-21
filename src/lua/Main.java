@@ -1,8 +1,9 @@
 package lua;
 
-import static com.sun.corba.se.impl.util.Utility.printStackTrace;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java_cup.runtime.Symbol;
@@ -12,10 +13,11 @@ import java_cup.runtime.Symbol;
  * @author marcos
  */
 public class Main {
+    static ArrayList<String> codigo = new ArrayList<>();
     public static void main(String[] args){
 //        geraLex();
 //        testaLex();
-        geraParser();
+//        geraParser();
         testaParser();
     }
     public static void geraLex(){
@@ -53,13 +55,43 @@ public class Main {
     private static void testaParser() {
         try {
             String testFile = "/home/marcos/compiler/LuaCompiler/src/lua/test.lua";
+            //Lê o arquivo teste para uma lista de linhas para facilitar a recuperação em caso de erro
+            FileReader reader = new FileReader(testFile);
+            BufferedReader buff = new BufferedReader(reader);
+            String line = buff.readLine();
+            while (line != null) {
+                codigo.add(line);
+                line = buff.readLine();
+            }
+            buff.close();
+            reader.close();
+
             Parser p = new Parser(new Lexer(new FileReader(testFile)));
-            Symbol result = p.parse();
-            System.out.println(result.value +"\t" +  result.sym);
-            System.out.println("Compilacao concluída com sucesso!");
+            No result = (No)p.parse().value;
+            System.out.println("Compilação Concluída com Sucesso");
+            System.out.println("ARVORE");
+            System.out.println(result);
         } catch (Exception ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            printStackTrace();
         }
+    }
+    public static void printErro(int line, int col){
+        System.out.println("Erro sintático na linha " + (line+1) + " coluna " + col + ":");
+        String s = codigo.get(line);
+        System.out.println(s);
+        
+        //Loop para adicionar espaços para apontar a posição incorreta
+        int i = 0;
+        s = s.substring(col);
+        for (; i < s.length(); i++) {
+            if (s.charAt(i) == ' ' || s.charAt(i) == ';' || s.charAt(i) == '(' || s.charAt(i) == ')' || s.charAt(i) == ',') {
+                break;
+            }
+        }
+        for (int j = 0; j < col + i; j++) {
+            System.out.print(" ");
+        }
+        System.out.println("↑");
+        System.exit(-1);
     }
 }
